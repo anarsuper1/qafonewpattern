@@ -69,13 +69,12 @@ function randomNumber() {
     let finish = parseFloat(inputMax.value);
     let count_question = parseFloat(inputCount.value);
     let res = [];
-    let seed = Date.now(); // Используем текущее время как начальное значение для генератора
+    let seed = Date.now();
 
     while (res.length < count_question) {
-        // Используем линейный конгруэнтный генератор для создания случайных чисел
-        let rand = linearCongruentialGenerator(seed, 1664525, 1013904223, 4294967296); // параметры для LC генератора
-        seed = rand; // обновляем seed для следующей итерации
-        let scaledRand = Math.floor((rand / 4294967296) * (finish - start + 1)) + start;
+        let rand = linearCongruentialGenerator(seed, 1664525, 1013904223, 4294967296);
+        seed = rand;
+        let scaledRand = Math.floor((rand / 4294967296) * (finish - start)) + start;
 
         if (!res.includes(scaledRand)) {
             res.push(scaledRand);
