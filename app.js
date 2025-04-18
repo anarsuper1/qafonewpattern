@@ -14,8 +14,8 @@ const questionPage = document.querySelector('.quiz');
 const startBtn = document.querySelector("#start");
 
 const inputElement = document.querySelector('.max');
-    
 inputElement.value = answ.length;
+
 console.log(answ);
 
 startBtn.addEventListener('click', () => {
@@ -27,7 +27,7 @@ startBtn.addEventListener('click', () => {
     localStorage.removeItem("incorrects");
     let random_number = randomNumber();
     
-    questions.length = 0; // Reset questions array
+    questions.length = 0;
 
     for (let k = 0; k < random_number.length; k++) {
         let i = random_number[k];
@@ -36,13 +36,13 @@ startBtn.addEventListener('click', () => {
 
         for (let j = 0; j < count; j++) {
             let copied_answers = [];
-            
+
             for (let m = 0; m < count + 1; m++) {
                 let new_answer = {};
                 if (m !== j) {
                     new_answer['text'] = answ[i][m];
-                    new_answer['correct'] = answer_questions[i][m-1];
-                    new_answer['originalIndex'] = m-1;
+                    new_answer['correct'] = answer_questions[i][m - 1];
+                    new_answer['originalIndex'] = m - 1;
                     copied_answers.push(new_answer);
                 }
             }
@@ -55,26 +55,37 @@ startBtn.addEventListener('click', () => {
             answers: answer[0]
         });
     }
-  
+
     startQuiz();
 });
 
-// Линейный конгруэнтный генератор для создания случайных чисел
 function linearCongruentialGenerator(seed, a, c, m) {
     return (a * seed + c) % m;
 }
 
 function randomNumber() {
-    let start = parseFloat(inputMin.value);
-    let finish = parseFloat(inputMax.value);
-    let count_question = parseFloat(inputCount.value);
+    let start = parseInt(inputMin.value);
+    let finish = parseInt(inputMax.value);
+    let count_question = parseInt(inputCount.value);
+
+    start = Math.max(0, start);
+    finish = Math.min(answ.length - 1, finish);
+
+    let rangeSize = finish - start + 1;
+
+    if (count_question > rangeSize) {
+        count_question = rangeSize;
+        inputCount.value = count_question;
+        alert(`В диапазоне [${start}, ${finish}] доступно только ${rangeSize} вопросов. Кол-во вопросов автоматически уменьшено до ${count_question}.`);
+    }
+
     let res = [];
     let seed = Date.now();
 
     while (res.length < count_question) {
         let rand = linearCongruentialGenerator(seed, 1664525, 1013904223, 4294967296);
         seed = rand;
-        let scaledRand = Math.floor((rand / 4294967296) * (finish - start)) + start;
+        let scaledRand = Math.floor((rand / 4294967296) * (finish - start + 1)) + start;
 
         if (!res.includes(scaledRand)) {
             res.push(scaledRand);
@@ -99,13 +110,13 @@ const backButton = document.getElementById("back-btn");
 
 let currentQuestionIndex = 0;
 let score = 0;
-let userAnswers = []; // Array to store user's selected answers
+let userAnswers = [];
 
 function startQuiz() {
     document.getElementById('incorrect').classList.add('hide');
     currentQuestionIndex = 0;
     score = 0;
-    userAnswers = Array(questions.length).fill(null); // Reset user's selected answers
+    userAnswers = Array(questions.length).fill(null);
     nextButton.innerHTML = "Next";
     backButton.innerHTML = "Back";
     showQuestion();
@@ -118,31 +129,27 @@ function addImage(element, container) {
         image.classList.add('pidr');
         container.appendChild(image);
     } else {
-        container.textContent = element; // Add text if it's not an image
+        container.textContent = element;
     }
 }
 
 function removeImages() {
-    // Remove images from the question and answer containers
     const images = document.querySelectorAll('.pidr');
     images.forEach(img => img.remove());
 }
 
 function showQuestion() {
     resetState();
-    removeImages(); // Remove images before showing the next question
+    removeImages();
 
     let currentQuestion = questions[currentQuestionIndex];
     let questionNo = currentQuestionIndex + 1;
 
-    // Clear the content of the question container
     questionElement.innerHTML = questionNo + ".  ";
 
-    // Check if the question contains an image
     if (currentQuestion.question.includes('output_imagess')) {
         addImage(currentQuestion.question, document.getElementById('q'));
     } else {
-        // If it's not an image, add the text content
         questionElement.textContent = questionNo + ".  " + currentQuestion.question;
     }
 
@@ -160,7 +167,6 @@ function showQuestion() {
         button.addEventListener("click", () => selectAnswer(index, shuffledAnswers));
     });
 
-    // If user has already answered this question, select the answer button
     const selectedAnswerOriginalIndex = userAnswers[currentQuestionIndex];
     if (selectedAnswerOriginalIndex !== null && selectedAnswerOriginalIndex !== undefined) {
         let selectedAnswer = shuffledAnswers.find(answer => answer.originalIndex === selectedAnswerOriginalIndex);
@@ -172,7 +178,6 @@ function showQuestion() {
         }
     }
 
-    // Highlight the correct answer
     const correctAnswer = shuffledAnswers.find(answer => answer.correct);
     if (correctAnswer) {
         const correctIndex = shuffledAnswers.indexOf(correctAnswer);
@@ -190,7 +195,7 @@ function resetState() {
 function selectAnswer(selectedAnswerIndex, shuffledAnswers) {
     const selectedAnswer = shuffledAnswers[selectedAnswerIndex];
     userAnswers[currentQuestionIndex] = selectedAnswer.originalIndex;
-    
+
     const selectedBtn = answerButtons.children[selectedAnswerIndex];
     const prevSelectedBtn = answerButtons.querySelector(".selected");
     const checkbox = document.querySelector('.checkbox-inline input[type="checkbox"]');
@@ -199,7 +204,7 @@ function selectAnswer(selectedAnswerIndex, shuffledAnswers) {
         prevSelectedBtn.classList.remove("selected");
     }
     selectedBtn.classList.add("selected");
-    
+
     const isCorrect = selectedBtn.dataset.correct === "true";
     if (isCorrect) {
         if (checkbox.checked) {
@@ -208,7 +213,8 @@ function selectAnswer(selectedAnswerIndex, shuffledAnswers) {
         score++;
     } else if (checkbox.checked && !isCorrect) {
         selectedBtn.classList.add("incorrect");
-    } if(!isCorrect){
+    }
+    if (!isCorrect) {
         incorrect_answers.push(questions[currentQuestionIndex])
     }
 
@@ -216,7 +222,7 @@ function selectAnswer(selectedAnswerIndex, shuffledAnswers) {
         if (button.dataset.correct === "true" && checkbox.checked) {
             button.classList.add("correct");
         }
-        if (checkbox.checked){
+        if (checkbox.checked) {
             button.disabled = true;
         }
     });
@@ -255,15 +261,18 @@ nextButton.addEventListener("click", () => {
         handleNextButton();
     } else {
         startQuiz();
-    } if (currentQuestionIndex === questions.length - 1) {
+    }
+    if (currentQuestionIndex === questions.length - 1) {
         nextButton.innerHTML = "Finish";
     }
 });
+
 backButton.addEventListener("click", () => {
     if (currentQuestionIndex > 0) {
         handleBackButton();
         nextButton.innerHTML = "Next";
-    } if (currentQuestionIndex === questions.length - 1) {
+    }
+    if (currentQuestionIndex === questions.length - 1) {
         document.getElementById('incorrect').classList.remove('hide');
         document.getElementById('btn').classList.add('hide');
         showAllQuestions(incorrect_answers);
@@ -282,7 +291,6 @@ showIncorrectAnswersButton.addEventListener('click', () => {
     document.getElementById('btn').classList.remove('hide');
     questionPage.classList.add('hide');
     location.reload();
-
     startQuiz();
 });
 
@@ -290,7 +298,7 @@ function showAllQuestions(incorrect_answers) {
     document.getElementById('question').classList.add('hide');
 
     resetState();
-    removeImages(); // Remove images before showing the next question
+    removeImages();
 
     for (let i = 0; i < incorrect_answers.length; i++) {
         currentQuestionindex = i;
